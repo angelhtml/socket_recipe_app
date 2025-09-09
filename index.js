@@ -10,7 +10,19 @@ require('dotenv').config();
 
 const PORT = process.env.PORT
 
-app.use(cors())
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 //app.use(express.static('public'))
 
 //connect to database
@@ -24,10 +36,11 @@ const io = new Server(server, {
     cors: {
         origin: `${process.env.CLIENT}`,
         methods: ["GET","POST"],
-        transports: ['websocket', 'polling'],
-        credentials: true
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
     },
-    allowEIO3: true
+    allowEIO3: true,
+    transports: ['websocket', 'polling']
 })
 
 io.on("connection", (socket) => {
